@@ -32,6 +32,7 @@ const ManagerDashboard = () => {
   });
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [teamAttendance, setTeamAttendance] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [rejectingRequestId, setRejectingRequestId] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [attendanceFilters, setAttendanceFilters] = useState({
@@ -100,6 +101,10 @@ const ManagerDashboard = () => {
         "Role:",
         user?.role,
       );
+
+      // Fetch departments for fallback lookup
+      const { data: deptData } = await supabase.from("departments").select("*");
+      if (deptData) setDepartments(deptData);
 
       // First, try fetching all users without any filter to check RLS
       const { data: allUsers, error: allError } = await supabase
@@ -509,7 +514,11 @@ const ManagerDashboard = () => {
                             </span>
                           </td>
                           <td className="p-3">
-                            {emp.departments?.name || emp.department_id || "Not Assigned"}
+                            {emp.departments?.name ||
+                              (Array.isArray(emp.departments) &&
+                                emp.departments[0]?.name) ||
+                              departments.find((d) => d.id === emp.department_id)?.name ||
+                              "Not Assigned"}
                           </td>
                           <td className="p-3">
                             <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">
